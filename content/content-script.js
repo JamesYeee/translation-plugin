@@ -14,7 +14,7 @@
   const { CONFIG, MESSAGE_TYPES } = app;
 
   const TRANSLATION_LOADING_TEXT = "翻译中...";
-  const TRANSLATION_FAILED_TEXT = "未获取到译文，请检查 Ollama 服务和扩展后台日志。";
+  const TRANSLATION_FAILED_TEXT = "未获取到译文，请检查翻译配置和扩展后台日志。";
 
   const state = {
     panelEl: null,

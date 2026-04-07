@@ -19,8 +19,48 @@
       </section>
 
       <section class="panel-section">
-        <h2 class="section-title">时间</h2>
-        <p class="section-meta" id="timeText">-</p>
+        <h2 class="section-title">翻译信息</h2>
+        <p class="section-meta"><span>引擎：</span><span id="engineText">-</span></p>
+        <p class="section-meta"><span>时间：</span><span id="timeText">-</span></p>
+      </section>
+
+      <section class="panel-section">
+        <h2 class="section-title">翻译设置</h2>
+        <form id="settingsForm" class="settings-form" autocomplete="off">
+          <label class="field-label" for="modeSelect">翻译模式</label>
+          <select class="field-input" id="modeSelect">
+            <option value="local">本地模型（Ollama）</option>
+            <option value="api">API（OpenAI 兼容）</option>
+          </select>
+
+          <div class="field-group" id="localFields">
+            <label class="field-label" for="localEndpointInput">本地端点</label>
+            <input class="field-input" id="localEndpointInput" type="url" placeholder="http://127.0.0.1:11434/api/chat" />
+
+            <label class="field-label" for="localModelInput">本地模型</label>
+            <input class="field-input" id="localModelInput" type="text" placeholder="qwen3.5:9b-q8_0" />
+          </div>
+
+          <div class="field-group" id="apiFields">
+            <label class="field-label" for="apiPresetSelect">API 预设</label>
+            <select class="field-input" id="apiPresetSelect"></select>
+
+            <label class="field-label" for="apiEndpointInput">API 端点</label>
+            <input class="field-input" id="apiEndpointInput" type="url" placeholder="https://api.openai.com/v1/chat/completions" />
+
+            <label class="field-label" for="apiModelInput">API 模型</label>
+            <input class="field-input" id="apiModelInput" type="text" placeholder="gpt-4.1-mini" />
+
+            <label class="field-label" for="apiKeyInput">API Key</label>
+            <input class="field-input" id="apiKeyInput" type="password" placeholder="sk-..." />
+          </div>
+
+          <div class="settings-actions">
+            <button class="btn btn-primary" type="submit">保存设置</button>
+            <button class="btn" id="resetBtn" type="button">恢复默认</button>
+          </div>
+          <p class="settings-status" id="settingsStatus">当前使用默认配置</p>
+        </form>
       </section>
     </main>
 

@@ -1,9 +1,11 @@
 # 划词翻译 Chrome 插件（MV3）
 
-支持以下两条链路，并已兼容优化后的代码结构：
+支持两种翻译引擎模式，并可在 Side Panel 里切换：
 
-- 普通网页划词翻译：优先在页面内弹出悬浮翻译面板
-- PDF 划词翻译：当 content script 不可用时，自动回退到 Side Panel 展示结果
+- 本地模型模式：通过 Ollama 进行翻译
+- API 模式：调用 OpenAI 兼容的聊天补全接口（支持 OpenAI / DeepSeek / Qwen 兼容接口 / Moonshot / 自定义）
+
+普通网页会优先显示页面内悬浮翻译面板；PDF 等场景自动回退到 Side Panel 展示。
 
 ## 项目结构
 
@@ -26,34 +28,45 @@
     └── utils.js
 ```
 
-## 设计说明
+## 关键设计
 
-- `shared/app-config.js`: 统一维护模型配置、超时、调试开关、UI 常量、翻译 Prompt
-- `shared/message-types.js`: 统一消息类型与 storage key，避免字符串散落在各文件
-- `shared/utils.js`: 公共工具函数（文本归一化、JSON 安全解析、时间格式化等）
-- `background/translate-service.js`: 专注 Ollama 请求与译文解析
-- `background/index.js`: 专注 Chrome 事件编排（右键菜单、消息分发、PDF 回退 Side Panel）
-- `content/content-script.js`: 专注网页悬浮面板渲染与交互
-- `sidepanel/*`: 专注 Side Panel 结果展示
+- `shared/app-config.js`：
+  - 统一维护默认翻译模式、Ollama 默认参数、API 预设、Prompt、超时等配置
+- `shared/message-types.js`：
+  - 统一消息类型
+  - 统一 storage key（翻译结果 + 翻译设置）
+- `background/translate-service.js`：
+  - 根据设置动态路由到本地模式或 API 模式
+  - 兼容不同返回格式并抽取译文
+- `background/index.js`：
+  - 处理右键菜单、消息分发、PDF 回退 Side Panel
+  - 每次翻译前读取最新设置
+- `sidepanel/*`：
+  - 展示翻译结果
+  - 提供翻译设置表单（模式切换、API Key、端点、模型）
 
-## 运行流程（保持原有能力）
+## 使用方式
 
-1. 用户右键划词触发菜单
-2. `background/index.js` 先尝试通知 content script 显示页面内悬浮翻译
-3. 若目标页面（如 PDF 浏览器内页）无法接收 content script 消息，则自动回退：
-   - 后台直接调用 Ollama 翻译
-   - 写入 `chrome.storage.local`
-   - 打开 Side Panel 展示结果
+1. 右键划词，点击 `AI trans-helper`
+2. 在 Side Panel 的“翻译设置”中选择模式：
+   - `本地模型（Ollama）`
+   - `API（OpenAI 兼容）`
+3. 若选择 API：
+   - 选择预设（OpenAI / DeepSeek / Qwen Compatible / Moonshot / Custom）
+   - 填写 API Key
+   - 按需修改端点与模型
+   - 点击“保存设置”
 
-## 本地加载方式
+## 本地加载
 
 1. 打开 `chrome://extensions/`
 2. 开启“开发者模式”
 3. 点击“加载已解压的扩展程序”
 4. 选择本项目目录
-5. 在 /etc/systemd/system/ollama.service 中添加以下内容 Environment="OLLAMA_ORIGINS=chrome-extension://your-extension-id"
 
-## 启动前检查
-1. 使用系统服务启动 Ollama 服务：`systemctl start ollama`
-2. 确认模型存在：`ollama list`
-3. 若没有该模型：`ollama pull qwen3.5:9b-q8_0(你的模型)`
+## Ollama 使用提示（本地模式）
+
+1. 启动服务：`systemctl start ollama`
+2. 查看模型：`ollama list`
+3. 拉取模型：`ollama pull qwen3.5:9b-q8_0`
+4. 允许扩展访问 Ollama（按你的系统配置 `OLLAMA_ORIGINS`）

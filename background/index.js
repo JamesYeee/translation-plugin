@@ -4,20 +4,21 @@ importScripts("../shared/app-config.js", "../shared/message-types.js", "../share
   const app = globalThis.LLT_APP;
   const bg = globalThis.LLT_BACKGROUND;
 
-  if (!app?.CONFIG || !app?.MESSAGE_TYPES || !app?.STORAGE_KEYS || !app?.utils || !bg?.callOllamaTranslate) {
+  if (!app?.CONFIG || !app?.MESSAGE_TYPES || !app?.STORAGE_KEYS || !app?.utils || !bg?.translateTextBySettings || !bg?.normalizeTranslationSettings) {
     console.error("[LLT] Missing shared modules in background worker");
     return;
   }
 
   const { CONFIG, MESSAGE_TYPES, STORAGE_KEYS, utils } = app;
-  const { callOllamaTranslate, logDebug } = bg;
+  const { translateTextBySettings, normalizeTranslationSettings, logDebug } = bg;
 
-  function buildSidePanelResult({ ok, source, translation = "", error = "" }) {
+  function buildSidePanelResult({ ok, source, translation = "", error = "", engine = "" }) {
     return {
       ok,
       source,
       translation,
       error,
+      engine,
       updatedAt: Date.now()
     };
   }
@@ -67,6 +68,29 @@ importScripts("../shared/app-config.js", "../shared/message-types.js", "../share
     });
   }
 
+  function getTranslationSettings() {
+    return new Promise((resolve, reject) => {
+      chrome.storage.local.get(STORAGE_KEYS.translationSettings, (result) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+
+        resolve(normalizeTranslationSettings(result[STORAGE_KEYS.translationSettings]));
+      });
+    });
+  }
+
+  function buildEngineLabel(settings) {
+    if (settings.mode === "api") {
+      const model = settings.api?.model || "unknown-model";
+      return `API / ${model}`;
+    }
+
+    const model = settings.local?.model || "unknown-model";
+    return `Local / ${model}`;
+  }
+
   function openSidePanel(tabId) {
     return new Promise((resolve, reject) => {
       if (!chrome.sidePanel?.setOptions || !chrome.sidePanel?.open) {
@@ -104,13 +128,17 @@ importScripts("../shared/app-config.js", "../shared/message-types.js", "../share
   }
 
   async function translateAndShowSidePanel(tabId, selectedText) {
+    const settings = await getTranslationSettings();
+    const engine = buildEngineLabel(settings);
+
     try {
-      const translation = await callOllamaTranslate(selectedText);
+      const translation = await translateTextBySettings(selectedText, settings);
       await setSidePanelResult(
         buildSidePanelResult({
           ok: true,
           source: selectedText,
-          translation
+          translation,
+          engine
         })
       );
     } catch (error) {
@@ -119,7 +147,8 @@ importScripts("../shared/app-config.js", "../shared/message-types.js", "../share
         buildSidePanelResult({
           ok: false,
           source: selectedText,
-          error: message
+          error: message,
+          engine
         })
       );
     }
@@ -203,11 +232,18 @@ importScripts("../shared/app-config.js", "../shared/message-types.js", "../share
       chars: String(message.text || "").length
     });
 
-    callOllamaTranslate(message.text)
-      .then((translation) => {
+    getTranslationSettings()
+      .then((settings) => {
+        return translateTextBySettings(message.text, settings).then((translation) => ({
+          translation,
+          engine: buildEngineLabel(settings)
+        }));
+      })
+      .then(({ translation, engine }) => {
         sendResponse({
           ok: true,
-          translation
+          translation,
+          engine
         });
       })
       .catch((error) => {
@@ -215,6 +251,7 @@ importScripts("../shared/app-config.js", "../shared/message-types.js", "../share
         sendResponse({
           ok: false,
           translation: "",
+          engine: "",
           error: errorMessage
         });
       });

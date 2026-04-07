@@ -8,6 +8,7 @@
   });
 
   app.STORAGE_KEYS = Object.freeze({
-    sidePanelResult: "lltSidePanelResult"
+    sidePanelResult: "lltSidePanelResult",
+    translationSettings: "lltTranslationSettings"
   });
 })();

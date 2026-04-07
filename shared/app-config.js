@@ -2,11 +2,62 @@
   const root = globalThis;
   const app = root.LLT_APP || (root.LLT_APP = {});
 
+  const apiProviderPresets = [
+    {
+      id: "openai",
+      label: "OpenAI",
+      endpoint: "https://api.openai.com/v1/chat/completions",
+      model: "gpt-4.1-mini"
+    },
+    {
+      id: "deepseek",
+      label: "DeepSeek",
+      endpoint: "https://api.deepseek.com/v1/chat/completions",
+      model: "deepseek-chat"
+    },
+    {
+      id: "qwen-compatible",
+      label: "Qwen Compatible",
+      endpoint: "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+      model: "qwen-plus"
+    },
+    {
+      id: "moonshot",
+      label: "Moonshot",
+      endpoint: "https://api.moonshot.cn/v1/chat/completions",
+      model: "moonshot-v1-8k"
+    },
+    {
+      id: "custom",
+      label: "Custom",
+      endpoint: "",
+      model: ""
+    }
+  ];
+
+  const defaultPreset = apiProviderPresets[0];
+
   app.CONFIG = Object.freeze({
     debug: true,
     requestTimeoutMs: 30000,
-    ollamaEndpoint: "http://127.0.0.1:11434/api/chat",
-    ollamaModel: "qwen3.5:9b-q8_0",
+    translationModes: Object.freeze({
+      local: "local",
+      api: "api"
+    }),
+    translationDefaults: Object.freeze({
+      mode: "local",
+      local: Object.freeze({
+        endpoint: "http://127.0.0.1:11434/api/chat",
+        model: "qwen3.5:9b-q8_0"
+      }),
+      api: Object.freeze({
+        preset: defaultPreset.id,
+        endpoint: defaultPreset.endpoint,
+        model: defaultPreset.model,
+        apiKey: ""
+      })
+    }),
+    apiProviderPresets: Object.freeze(apiProviderPresets.map((item) => Object.freeze(item))),
     contextMenu: Object.freeze({
       id: "ai-trans-helper-translate-selection",
       title: "AI trans-helper"
