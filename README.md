@@ -59,10 +59,11 @@
 
 ## 本地加载
 
-1. 打开 `chrome://extensions/`
-2. 开启“开发者模式”
-3. 点击“加载未打包的扩展程序”
-4. 选择本项目目录
+1. 选择一个文件夹目录 `git clone https://github.com/JamesYeee/translation-plugin.git`
+2. 打开 `chrome://extensions/`
+3. 开启“开发者模式”
+4. 点击“加载未打包的扩展程序”
+5. 选择本项目目录
 
 ## Ollama 使用提示（本地模式）
 
