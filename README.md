@@ -51,9 +51,9 @@
 2. 开启“开发者模式”
 3. 点击“加载已解压的扩展程序”
 4. 选择本项目目录
+5. 在 /etc/systemd/system/ollama.service 中添加以下内容 Environment="OLLAMA_ORIGINS=chrome-extension://your-extension-id"
 
 ## 启动前检查
-
-1. 启动 Ollama 服务：`ollama serve`
+1. 使用系统服务启动 Ollama 服务：`systemctl start ollama`
 2. 确认模型存在：`ollama list`
-3. 若没有该模型：`ollama pull qwen3.5:9b-q8_0`
+3. 若没有该模型：`ollama pull qwen3.5:9b-q8_0(你的模型)`
