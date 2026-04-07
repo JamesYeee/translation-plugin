@@ -13,7 +13,7 @@
     "http://localhost/*"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background/index.js"
   },
   "content_scripts": [
     {
@@ -21,10 +21,13 @@
         "<all_urls>"
       ],
       "js": [
-        "content-script.js"
+        "shared/app-config.js",
+        "shared/message-types.js",
+        "shared/utils.js",
+        "content/content-script.js"
       ],
       "css": [
-        "content-style.css"
+        "content/content-style.css"
       ],
       "run_at": "document_idle"
     }
@@ -33,6 +36,6 @@
     "default_title": "context translate"
   },
   "side_panel": {
-    "default_path": "sidepanel.html"
+    "default_path": "sidepanel/sidepanel.html"
   }
 }

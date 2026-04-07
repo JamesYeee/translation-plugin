@@ -1,67 +1,56 @@
-# 划词翻译 Chrome 插件框架
+# 划词翻译 Chrome 插件（MV3）
 
-这是一个最小可用的 MV3 插件骨架，支持：
+支持以下两条链路，并已兼容优化后的代码结构：
 
-- 在网页中划词（选中一句文本）
-- 直接调用本机 Ollama 模型进行翻译
-- 以简洁悬浮框显示翻译结果
+- 普通网页划词翻译：优先在页面内弹出悬浮翻译面板
+- PDF 划词翻译：当 content script 不可用时，自动回退到 Side Panel 展示结果
 
-## 文件说明
+## 项目结构
 
-- `manifest.json`: 插件配置与权限
-- `content-script.js`: 监听划词、展示悬浮框、向后台请求翻译
-- `content-style.css`: 悬浮框样式
-- `background.js`: 调用 Ollama `/api/chat` 并做翻译结果解析
+```text
+.
+├── manifest.json
+├── background
+│   ├── index.js
+│   └── translate-service.js
+├── content
+│   ├── content-script.js
+│   └── content-style.css
+├── sidepanel
+│   ├── sidepanel.html
+│   ├── sidepanel.css
+│   └── sidepanel.js
+└── shared
+    ├── app-config.js
+    ├── message-types.js
+    └── utils.js
+```
+
+## 设计说明
+
+- `shared/app-config.js`: 统一维护模型配置、超时、调试开关、UI 常量、翻译 Prompt
+- `shared/message-types.js`: 统一消息类型与 storage key，避免字符串散落在各文件
+- `shared/utils.js`: 公共工具函数（文本归一化、JSON 安全解析、时间格式化等）
+- `background/translate-service.js`: 专注 Ollama 请求与译文解析
+- `background/index.js`: 专注 Chrome 事件编排（右键菜单、消息分发、PDF 回退 Side Panel）
+- `content/content-script.js`: 专注网页悬浮面板渲染与交互
+- `sidepanel/*`: 专注 Side Panel 结果展示
+
+## 运行流程（保持原有能力）
+
+1. 用户右键划词触发菜单
+2. `background/index.js` 先尝试通知 content script 显示页面内悬浮翻译
+3. 若目标页面（如 PDF 浏览器内页）无法接收 content script 消息，则自动回退：
+   - 后台直接调用 Ollama 翻译
+   - 写入 `chrome.storage.local`
+   - 打开 Side Panel 展示结果
 
 ## 本地加载方式
 
-1. 打开 Chrome 扩展页：`chrome://extensions/`
-2. 开启右上角“开发者模式”
+1. 打开 `chrome://extensions/`
+2. 开启“开发者模式”
 3. 点击“加载已解压的扩展程序”
 4. 选择本项目目录
-
-## Ollama 配置（当前已接入）
-
-当前在 `background.js` 中使用：
-
-```js
-const OLLAMA_CHAT_ENDPOINT = "http://127.0.0.1:11434/api/chat";
-const OLLAMA_MODEL = "qwen3.5:9b-q8_0";
-```
-
-发送到 Ollama 的请求核心参数：
-
-```json
-{
-  "model": "qwen3.5:9b-q8_0",
-  "stream": false,
-  "think": false,
-  "format": "json",
-  "options": {
-    "temperature": 0.1,
-    "top_p": 0.9,
-    "repeat_penalty": 1.05
-  },
-  "messages": [
-    {
-      "role": "system",
-      "content": "严谨翻译规则 + 只输出 JSON"
-    },
-    {
-      "role": "user",
-      "content": "待翻译句子"
-    }
-  ]
-}
-```
-
-插件期望模型输出：
-
-```json
-{"translation":"..."}
-```
-
-如果模型未严格按 JSON 返回，插件会回退到原始文本输出。
 
 ## 启动前检查
 
