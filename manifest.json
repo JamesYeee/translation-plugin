@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "context-translate-helper",
+  "version": "0.1.0",
+  "description": "use local model API to translate context in web page",
+  "permissions": [
+    "storage",
+    "contextMenus",
+    "sidePanel"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content-script.js"
+      ],
+      "css": [
+        "content-style.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "context translate"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  }
+}
